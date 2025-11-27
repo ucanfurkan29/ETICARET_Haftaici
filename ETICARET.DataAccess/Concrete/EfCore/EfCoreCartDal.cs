@@ -44,6 +44,7 @@ namespace ETICARET.DataAccess.Concrete.EfCore
             }
         }
 
+        //sepeti güncelle
         public override void Update(Cart entity)
         {
             using (var context = new DataContext())
