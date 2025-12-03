@@ -7,9 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="EmailService\" />
-    <Folder Include="Extensions\" />
-    <Folder Include="Identity\" />
     <Folder Include="Middlewares\" />
     <Folder Include="ViewComponents\" />
     <Folder Include="TagHelpers\" />

@@ -1,4 +1,59 @@
+using ETICARET.WebUI.Identity;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddRazorPages(); //razor pages ekledik
+
+builder.Services.AddDbContext<ApplicationIdentityDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("IdentityConnection"))
+);
+
+//Identity servislerini ekledik
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationIdentityDbContext>()
+    .AddDefaultTokenProviders();
+
+var userManager = builder.Services.BuildServiceProvider().GetService<UserManager<ApplicationUser>>();//kullanýcý yöneticisi
+var roleManager = builder.Services.BuildServiceProvider().GetService<RoleManager<IdentityRole>>();//rol yöneticisi
+
+builder.Services.Configure<IdentityOptions>(options =>
+{
+    // Password settings
+    options.Password.RequireNonAlphanumeric = true; //en az bir özel karakter
+    options.Password.RequireLowercase = true; //en az bir küçük harf
+    options.Password.RequireUppercase = true; //en az bir büyük harf
+    options.Password.RequireDigit = true; //en az bir rakam
+    options.Password.RequiredLength = 6; //minimum 6 karakter
+
+    //Hesap kilitleme ayarlarý
+    options.Lockout.MaxFailedAccessAttempts = 5; //5 baþarýsýz giriþte kilitle
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5); //5 dakika kilitli kalýr
+    options.Lockout.AllowedForNewUsers = true; //yeni kullanýcýlar için kilitleme aktif
+
+    //Kullanýcý ayarlarý
+    options.User.RequireUniqueEmail = true; //her kullanýcý için benzersiz e-posta
+    options.SignIn.RequireConfirmedEmail = true; //e-posta onayý zorunlu 
+    options.SignIn.RequireConfirmedPhoneNumber = false; //telefon onayý zorunlu deðil
+});
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/account/login"; //giriþ sayfasý
+    options.LogoutPath = "/account/logout"; //çýkýþ sayfasý
+    options.AccessDeniedPath = "/account/accessdenied"; //eriþim reddedildi sayfasý
+    options.SlidingExpiration = true; //oturum kaydýrma
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(60); //oturum süresi 60 dakika
+    options.Cookie = new CookieBuilder
+    {
+        HttpOnly = true, //sadece HTTP eriþimi
+        Name = "ETICARET.Security.Cookie", //çerez adý
+        SameSite = SameSiteMode.Strict, //ayný site kýsýtlamasý
+        //farklý sitelerden gelen isteklerde çerezin gönderilmemesi
+    };
+});
+
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
