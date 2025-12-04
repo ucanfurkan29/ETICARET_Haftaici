@@ -1,4 +1,9 @@
+using ETICARET.Business.Abstract;
+using ETICARET.Business.Concrete;
+using ETICARET.DataAccess.Abstract;
+using ETICARET.DataAccess.Concrete.EfCore;
 using ETICARET.WebUI.Identity;
+using ETICARET.WebUI.Middlewares;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -57,6 +62,18 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<IProductDal,EfCoreProductDal>();
+builder.Services.AddScoped<IProductService, ProductManager>();
+builder.Services.AddScoped<ICategoryDal, EfCoreCategoryDal>();
+builder.Services.AddScoped<ICategoryService, CategoryManager>();
+builder.Services.AddScoped<ICommentDal, EfCoreCommentDal>();
+builder.Services.AddScoped<ICommentService, CommentManager>();
+builder.Services.AddScoped<ICartDal, EfCoreCartDal>();
+builder.Services.AddScoped<ICartService, CartManager>();
+builder.Services.AddScoped<IOrderDal, EfCoreOrderDal>();
+builder.Services.AddScoped<IOrderService, OrderManager>();
+
+builder.Services.AddMvc().SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Latest);
 
 var app = builder.Build();
 
@@ -68,15 +85,19 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
-app.UseStaticFiles();
+SeedDatabase.Seed();
 
+app.UseStaticFiles();
+app.CustomStaticFiles();
+app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
 app.UseRouting();
 
-app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 
+SeedIdentity.Seed(userManager, roleManager, app.Configuration).Wait();
 app.Run();

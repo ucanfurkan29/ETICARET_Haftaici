@@ -36,10 +36,7 @@ namespace ETICARET.Business.Concrete
             return _productDal.GetById(id);
         }
 
-        public void GetCountByCategory(string category)
-        {
-            _productDal.GetCountByCategory(category);
-        }
+
 
         public List<Product> GetProductByCategory(string category, int page, int pageSize)
         {
@@ -54,6 +51,11 @@ namespace ETICARET.Business.Concrete
         public void Update(Product entity, int[] categoryIds)
         {
             _productDal.Update(entity, categoryIds);
+        }
+
+        int IProductService.GetCountByCategory(string category)
+        {
+           return _productDal.GetCountByCategory(category);
         }
     }
 }

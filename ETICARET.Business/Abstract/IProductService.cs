@@ -16,6 +16,6 @@ namespace ETICARET.Business.Abstract
         void Create(Product entity); // Yeni ürün oluşturur
         void Update(Product entity, int[] categoryIds); //ürünü ve kategorilerini günceller
         void Delete(Product entity); // Ürünü siler
-        void GetCountByCategory(string category); // Kategoriye göre ürün sayısını getirir
+        int GetCountByCategory(string category); // Kategoriye göre ürün sayısını getirir
     }
 }

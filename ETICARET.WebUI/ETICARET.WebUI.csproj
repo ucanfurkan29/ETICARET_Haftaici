@@ -7,12 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Middlewares\" />
-    <Folder Include="ViewComponents\" />
-    <Folder Include="TagHelpers\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Iyzipay" Version="2.1.66" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.11" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.11">
@@ -30,6 +24,12 @@
   <ItemGroup>
     <ProjectReference Include="..\ETICARET.Business\ETICARET.Business.csproj" />
     <ProjectReference Include="..\ETICARET.DataAccess\ETICARET.DataAccess.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Views\Account\" />
+    <Folder Include="Views\Admin\" />
+    <Folder Include="Views\Cart\" />
   </ItemGroup>
 
 </Project>
