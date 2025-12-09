@@ -94,10 +94,26 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseRouting();
 
-
-app.MapControllerRoute(
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+    endpoints.MapControllerRoute(
+        name: "CategoryEdit",
+        pattern: "admin/categories/{id?}",
+        defaults: new { controller = "Admin", action = "EditCategory" }
+        );
+
+    endpoints.MapControllerRoute(
+        name: "adminProducts",
+        pattern: "admin/products/{id?}",
+        defaults: new { controller = "Admin", action = "EditProduct" }
+        );
+
+});
+
 
 SeedIdentity.Seed(userManager, roleManager, app.Configuration).Wait();
 app.Run();
