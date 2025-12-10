@@ -3,14 +3,15 @@
 <ul class="list-group category-list">
     <a href="/products/all">
         <li class="list-group-item list-group-item-action">
-            <strong>Tüm Kategoriler</strong>
+            <strong>All Products</strong>
         </li>
     </a>
     @foreach (var category in Model.Categories)
     {
-        <a asp-controller="Shop" asp-action="List" asp-route-category="@category.Name.ToLower()" 
-        class="list-group-item list-group-item-action @(Model.SelectedCategory == category.Name.ToLower() ? "active" : "")">
-            @category.Name
-        </a>    
+       <a asp-controller="Shop" asp-action="List" asp-route-category="@category.Name.ToLower()"
+       class="list-group-item list-group-item-action @(Model.SelectedCategory == category.Name.ToLower() ? "active" : "")">
+   
+        @category.Name
+        </a>
     }
 </ul>

@@ -1,4 +1,4 @@
-using ETICARET.Business.Abstract;
+﻿using ETICARET.Business.Abstract;
 using ETICARET.Business.Concrete;
 using ETICARET.DataAccess.Abstract;
 using ETICARET.DataAccess.Concrete.EfCore;
@@ -9,60 +9,62 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddRazorPages(); //razor pages ekledik
+// 📄 Razor Pages desteği ekle
+builder.Services.AddRazorPages();
 
+// 🗄️ Identity veritabanı bağlantısı ve kullanıcı yönetimi
 builder.Services.AddDbContext<ApplicationIdentityDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("IdentityConnection"))
 );
 
-//Identity servislerini ekledik
+// 👤 Identity servislerini yapılandır
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationIdentityDbContext>()
-    .AddDefaultTokenProviders();
+                .AddEntityFrameworkStores<ApplicationIdentityDbContext>()
+                .AddDefaultTokenProviders();
 
-var userManager = builder.Services.BuildServiceProvider().GetService<UserManager<ApplicationUser>>();//kullan�c� y�neticisi
-var roleManager = builder.Services.BuildServiceProvider().GetService<RoleManager<IdentityRole>>();//rol y�neticisi
+// ⚠️ PROBLEM: Bu yaklaşım önerilmez - Service Provider erken oluşturulmamalı
+var userManager = builder.Services.BuildServiceProvider().GetService<UserManager<ApplicationUser>>();
+var roleManager = builder.Services.BuildServiceProvider().GetService<RoleManager<IdentityRole>>();
 
+// 🔐 Identity seçeneklerini yapılandır
 builder.Services.Configure<IdentityOptions>(options =>
 {
-    // Password settings
-    options.Password.RequireNonAlphanumeric = true; //en az bir �zel karakter
-    options.Password.RequireLowercase = true; //en az bir k���k harf
-    options.Password.RequireUppercase = true; //en az bir b�y�k harf
-    options.Password.RequireDigit = true; //en az bir rakam
-    options.Password.RequiredLength = 6; //minimum 6 karakter
+    // Şifre gereksinimleri
+    options.Password.RequireNonAlphanumeric = true;  // Özel karakter zorunlu
+    options.Password.RequireDigit = true;            // Rakam zorunlu
+    options.Password.RequireLowercase = true;        // Küçük harf zorunlu
+    options.Password.RequireUppercase = true;        // Büyük harf zorunlu
+    options.Password.RequiredLength = 6;             // Minimum uzunluk
 
-    //Hesap kilitleme ayarlar�
-    options.Lockout.MaxFailedAccessAttempts = 5; //5 ba�ar�s�z giri�te kilitle
-    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5); //5 dakika kilitli kal�r
-    options.Lockout.AllowedForNewUsers = true; //yeni kullan�c�lar i�in kilitleme aktif
+    // Hesap kilitleme ayarları
+    options.Lockout.MaxFailedAccessAttempts = 5;                    // 5 başarısız deneme
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5); // 5 dakika kilitleme
+    options.Lockout.AllowedForNewUsers = true;                      // Yeni kullanıcılar için aktif
 
-    //Kullan�c� ayarlar�
-    options.User.RequireUniqueEmail = true; //her kullan�c� i�in benzersiz e-posta
-    options.SignIn.RequireConfirmedEmail = true; //e-posta onay� zorunlu 
-    options.SignIn.RequireConfirmedPhoneNumber = false; //telefon onay� zorunlu de�il
+    // Kullanıcı ayarları
+    options.User.RequireUniqueEmail = true;          // Benzersiz email zorunlu
+    options.SignIn.RequireConfirmedEmail = true;     // Email doğrulama zorunlu
+    options.SignIn.RequireConfirmedPhoneNumber = false; // Telefon doğrulama opsiyonel
 });
 
+// 🍪 Cookie yapılandırması
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.LoginPath = "/account/login"; //giri� sayfas�
-    options.LogoutPath = "/account/logout"; //��k�� sayfas�
-    options.AccessDeniedPath = "/account/accessdenied"; //eri�im reddedildi sayfas�
-    options.SlidingExpiration = true; //oturum kayd�rma
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(60); //oturum s�resi 60 dakika
+    options.LoginPath = "/account/login";           // Giriş sayfası
+    options.LogoutPath = "/account/logout";         // Çıkış sayfası
+    options.AccessDeniedPath = "/account/accessdenied"; // Erişim reddedildi sayfası
+    options.SlidingExpiration = true;               // Sliding expiration aktif
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(60); // 60 dakika süre
     options.Cookie = new CookieBuilder
     {
-        HttpOnly = true, //sadece HTTP eri�imi
-        Name = "ETICARET.Security.Cookie", //�erez ad�
-        SameSite = SameSiteMode.Strict, //ayn� site k�s�tlamas�
-        //farkl� sitelerden gelen isteklerde �erezin g�nderilmemesi
+        HttpOnly = true,                            // XSS koruması
+        Name = "ETICARET.Security.Cookie",          // Cookie adı
+        SameSite = SameSiteMode.Strict             // CSRF koruması
     };
 });
 
-
-// Add services to the container.
-builder.Services.AddControllersWithViews();
-builder.Services.AddScoped<IProductDal,EfCoreProductDal>();
+// 🏢 Business ve DataAccess katmanları DI kaydı
+builder.Services.AddScoped<IProductDal, EfCoreProductDal>();
 builder.Services.AddScoped<IProductService, ProductManager>();
 builder.Services.AddScoped<ICategoryDal, EfCoreCategoryDal>();
 builder.Services.AddScoped<ICategoryService, CategoryManager>();
@@ -73,47 +75,91 @@ builder.Services.AddScoped<ICartService, CartManager>();
 builder.Services.AddScoped<IOrderDal, EfCoreOrderDal>();
 builder.Services.AddScoped<IOrderService, OrderManager>();
 
+// 🎭 MVC desteği ekle
 builder.Services.AddMvc().SetCompatibilityVersion(Microsoft.AspNetCore.Mvc.CompatibilityVersion.Latest);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// 🔧 HTTP request pipeline yapılandırması
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
 }
 
+// 🌱 Veritabanı seed işlemi (Ürün, Kategori, Ürün-Kategori ilişkileri)
 SeedDatabase.Seed();
 
-app.UseStaticFiles();
-app.CustomStaticFiles();
-app.UseHttpsRedirection();
-app.UseAuthentication();
-app.UseAuthorization();
-app.UseRouting();
+app.UseStaticFiles();                    // Statik dosyalar
+app.CustomStaticFiles();                 // node_modules => modules (Custom middleware)
+app.UseHttpsRedirection();               // HTTPS yönlendirme
+app.UseAuthentication();                 // Kimlik doğrulama
+app.UseAuthorization();                  // Yetkilendirme
+app.UseRouting();                        // Routing
 
+// 🛣️ Endpoint yapılandırması
 app.UseEndpoints(endpoints =>
 {
-    endpoints.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    // Ana route
+    endpoints.MapControllerRoute("default", "{controller=Home}/{action=Index}");
 
+    // Ürün kategorisi route
     endpoints.MapControllerRoute(
-        name: "CategoryEdit",
-        pattern: "admin/categories/{id?}",
-        defaults: new { controller = "Admin", action = "EditCategory" }
-        );
+        name: "products",
+        pattern: "products/{category}",
+        defaults: new { controller = "Shop", action = "List" }
+    );
 
+    // Admin ürün listesi
     endpoints.MapControllerRoute(
         name: "adminProducts",
-        pattern: "admin/products/{id?}",
-        defaults: new { controller = "Admin", action = "EditProduct" }
-        );
+        pattern: "admin/products",
+        defaults: new { controller = "Admin", action = "ProductList" }
+    );
 
+    // Admin ürün düzenleme
+    endpoints.MapControllerRoute(
+        name: "adminProductEdit", // ⚠️ Aynı isim kullanılmamalı
+        pattern: "admin/products/{id}",
+        defaults: new { controller = "Admin", action = "EditProduct" }
+    );
+
+    // Admin kategori listesi
+    endpoints.MapControllerRoute(
+        name: "adminCategories", // ⚠️ İsim düzeltilmeli
+        pattern: "admin/category",
+        defaults: new { controller = "Admin", action = "CategoryList" }
+    );
+
+    // Admin kategori düzenleme
+    endpoints.MapControllerRoute(
+        name: "adminCategoryEdit", // ⚠️ İsim düzeltilmeli
+        pattern: "admin/categories/{id}",
+        defaults: new { controller = "Admin", action = "EditCategory" }
+    );
+
+    // Sepet
+    endpoints.MapControllerRoute(
+        name: "cart",
+        pattern: "cart",
+        defaults: new { controller = "Cart", action = "Index" }
+    );
+
+    // Ödeme
+    endpoints.MapControllerRoute(
+        name: "checkout",
+        pattern: "checkout",
+        defaults: new { controller = "Cart", action = "Checkout" }
+    );
+
+    // Siparişler
+    endpoints.MapControllerRoute(
+        name: "orders",
+        pattern: "orders",
+        defaults: new { controller = "Cart", action = "GetOrders" }
+    );
 });
 
-
+// 👥 Identity seed işlemi (Kullanıcı ve rol oluşturma)
 SeedIdentity.Seed(userManager, roleManager, app.Configuration).Wait();
+
 app.Run();
